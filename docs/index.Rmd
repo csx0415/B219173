@@ -194,3 +194,6 @@ Bikle, D. (2017). Vitamin D: Production, Metabolism, and Mechanisms of Action. [
 Spellman, G. and Bird, D. (2023). Sunshine and solar power in the UK. Theoretical and Applied Climatology. doi:https://doi.org/10.1007/s00704-023-04711-x.
 
 www.opendata.nhs.scot. (n.d.). Prescriptions in the Community - Scottish Health and Social Care Open Data. [online] Available at: https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community.
+
+# Generative AI
+I have used ChatGPT to debug my code. Additionally, due to the fact that English is not my first language, I also used it to check my gramma and refine my writing.
