@@ -7,6 +7,7 @@ output:
 date: "2024-11-18"
 ---
 # Introduction
+
 Coming from a region closer to the equator, where daylight exposure remains relatively consistent year-round, I was struck by the pronounced differences in seasonal sunlight hours in the UK. A friend in London shared their experience of being prescribed vitamin D tablets due to insufficient sunlight exposure, which impairs the body’s ability to naturally synthesize this essential nutrient. Vitamin D plays a critical role in maintaining bone health, supporting immune function, and reducing inflammation, making it vital for overall health. Its synthesis is directly dependent on exposure to ultraviolet (UV) light, which is a component of sunlight. UV light initiates the production of vitamin D in the skin, linking sunlight and UV intensity to endogenous vitamin D levels (Bikle, 2017).
 
 This raised my curiosity about the situation in Scotland, a country at a higher latitude than England, where winter months are characterized by even more limited sunlight (Spellman and Bird, 2023). Such conditions could plausibly increase reliance on vitamin D prescriptions to compensate for the reduced natural synthesis of this nutrient.
@@ -25,37 +26,88 @@ library(purrr)
 library(readr)
 ```
 ## Daylight Data Preparation
-Daylight data from August 2021 to August 2024 was downlaoded and converted into a csv file. It was then selected, transformed into a long format, and prepared for integration with the prescribing data. The dataset was restructured to ensure consistency in date formatting and compatibility for merging. Data sets associated with sunlight can be found here: https://www.metoffice.gov.uk/pub/data/weather/uk/climate/datasets/Sunshine/date/Scotland.txt
+
+Daylight data from August 2021 to August 2024 was selected, transformed into a long format, and prepared for integration with the prescribing data. The dataset was restructured to ensure consistency in date formatting and compatibility for merging. Data sets associated with sunlight can be found here: https://www.metoffice.gov.uk/pub/data/weather/uk/climate/datasets/Sunshine/date/Scotland.txt
 ```{r, message=FALSE,warning = FALSE}
 # 1. Read Daylight Data
-daylight <- read.csv("/Users/chensixue/Desktop/data science /B219173/data/daylight.csv", header = TRUE, sep = ",")
+# URL of the dataset
+daylight <- "https://www.metoffice.gov.uk/pub/data/weather/uk/climate/datasets/Sunshine/date/Scotland.txt"
+
+# Read the dataset from the URL, skipping the first 5 lines
+daylight <- read.table(daylight, skip = 5, header = TRUE, stringsAsFactors = FALSE, fill = TRUE)
+
+# Rename the columns manually to match the desired structure
+col_names <- c("year", "jan", "feb", "mar", "apr", "may", "jun", 
+               "jul", "aug", "sep", "oct", "nov", "dec", "win", 
+               "spr", "sum", "aut", "ann")
+names(daylight) <- col_names
+
+# Map month abbreviations to numeric values
 month_mapping <- c("jan" = 1, "feb" = 2, "mar" = 3, "apr" = 4, "may" = 5,
                    "jun" = 6, "jul" = 7, "aug" = 8, "sep" = 9, "oct" = 10,
                    "nov" = 11, "dec" = 12)
 
-# Reshape daylight data to long format and filter from August 2021 onward
+# Reshape daylight data to a long format and filter for dates from August 2021 onward
 long_daylight_data <- daylight %>%
   pivot_longer(cols = jan:dec, names_to = "month", values_to = "daylight") %>%
   mutate(
-    month = month_mapping[month],  # Convert month abbreviations to numbers
-    Month = sprintf("%04d%02d", year, month)  # Format as YYYYMM
+    month = month_mapping[month],  # Convert month abbreviations to numeric values
+    Month = sprintf("%04d%02d", year, month)  # Create a YYYYMM format for months
   ) %>%
-  select(Month, daylight) %>%
-  filter(Month >= 202108)  # Filter for dates from August 2021 onward
+  select(Month, daylight) %>%  # Keep only Month and daylight columns
+  filter(Month >= 202108)  # Include data from August 2021 onward
 
-# Ensure Month is a character type for consistent joins
+# Convert Month to character type to ensure compatibility for joins
 filtered_daylight_data <- long_daylight_data %>%
   mutate(Month = as.character(Month))
+
 ```
 ## Prescribing Data Preparation 
-Prescribing data from 37 monthly (August 2021 to August 2024) datasets was downloaded first and then added it into a new folder under "data/consecutive data". Then they are combined into a single comprehensive file for analysis. This step involved standardizing the structure of individual files to handle discrepancies, such as missing or inconsistent columns, ensuring a seamless merge for subsequent analyses.Data sets associated with prescriptions can be found here:https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community
+
+Prescribing data from 37 monthly (August 2021 to August 2024) datasets was combined into a single comprehensive file for analysis. This step involved standardizing the structure of individual files to handle discrepancies, such as missing or inconsistent columns, ensuring a seamless merge for subsequent analyses.Data sets associated with prescriptions can be found here:https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community
 ```{r,message=FALSE,warning = FALSE}
 # 2. Read and Combine Prescribing Data
-files <- list.files(here("data", "consecutive_data"), pattern = "csv")
+files <- c("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/e4985a62-9d59-4e71-8800-3f7ca29ffe0c/download/pitc202408.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/1cb425fc-640c-4b37-9013-f8e97f274085/download/pitc202407.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/95f7f250-bd04-4e4a-b853-5df75b00a632/download/pitc202406.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/5fbbd126-6166-4249-9620-7ed78e877297/download/pitc202405.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/409a02f2-b77c-47a0-917d-4a5a1c90f182/download/pitc202404.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/a42762ac-47cb-4fb6-b9b1-2478a588c0ed/download/pitc202403.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/86fda652-0e1d-48bb-9368-aa2a560d925b/download/pitc202402.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/d3eaaf84-0f3b-4fb8-9460-e33503095fbe/download/pitc202401.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/00cdf8d7-f784-4e87-894c-34f2540ea6ab/download/pitc202312.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/21d11fed-a494-4e30-9bb6-46143c3b9530/download/pitc202311.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/94134438-db1d-4b8d-8f70-5e9b0e47bd03/download/pitc202310.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/2d3d240f-1467-4a91-9f0e-769745650cb9/download/pitc202309.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/72ca4ad2-0228-4672-9eb0-cc911e4a8ca7/download/pitc202308.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/7bb45ee6-6f1c-45f4-933b-958bdbe0ca4f/download/pitc202307.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/66e9611a-fbea-45b2-9edd-351c388fd06d/download/pitc202306.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/a0cf1a9f-d8c3-4bda-a8d9-733897c4c288/download/pitc202305.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/720699b0-7584-4ddb-9915-79b298189d1d/download/pitc202304.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/8dd06c58-1a09-483a-8a01-5d68cfb8b38e/download/pitc202303.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/ad6d7f4e-08fd-40ed-ad49-bf450d386f39/download/pitc202302.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/6caa7144-f0e4-4ab0-b9e4-8fa10c8edf1c/download/pitc202301.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/00213ffa-941e-4389-9e6f-3bca8067da8c/download/pitc202212.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/023986c0-3bb2-43cb-84e8-2e0b3bb1f55f/download/pitc202211.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/bd7bc2cf-4de5-4711-bd5a-9e3b77305453/download/pitc202210.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/9d0a518d-9d9c-4bcb-afd8-51f6abb7edf1/download/pitc202209.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/49fa5784-be06-4015-bc6d-9b5db8726473/download/pitc202208.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/26ce66f1-e7f2-4c71-9995-5dc65f76ecfb/download/pitc202207.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/debeadd8-2bbb-4dd3-82de-831531bab2cb/download/pitc202206.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/1b4e3200-b6e6-415f-b19a-b9ef927db1ab/download/pitc202205.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/7de8c908-86f8-45ac-b6a4-e21d1df30584/download/pitc202204.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/a0ec3bf2-7339-413b-9c66-2891cfd7919f/download/pitc202203.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/bd7aa5c9-d708-4d0b-9b28-a9d822c84e34/download/pitc202202.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/53a53d61-3b3b-4a12-888b-a788ce13db9c/download/pitc202201.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/ad9e7b46-47fb-4d42-baad-f8e98e8f5936/download/pitc202112.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/6ba23bd1-f53b-4946-bc79-00633239d08f/download/pitc202111.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/35cbc6b1-3462-4563-88ba-d57c03782534/download/pitc202110.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/d7d1ada5-2763-4698-bf39-7bdb06f67377/download/pitc202109.csv",
+          "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/6cdae245-0423-4e6f-9e1c-dc9e129df3aa/download/pitc202108.csv")
 
 # Function to handle files with or without the DMDCode column
 read_and_standardize <- function(file) {
-  read_csv(here("data", "consecutive_data", file)) %>%
+  read_csv(file) %>%
     mutate(DMDCode = ifelse("DMDCode" %in% colnames(.), as.character(DMDCode), NA_character_))
 }
 
@@ -64,6 +116,7 @@ consecutive_data <- files %>%
   map_dfr(~ read_and_standardize(.x))
 ```
 ## Finding Vitamin D Prescription Quantity Each Month
+
 To identify the monthly quantity of vitamin D prescriptions, I filtered the dataset using keywords such as d3, d2, calciferol, cholecalciferol, and ergocalciferol. These terms were selected because they encompass the various names used for vitamin D. Specifically, D3 and cholecalciferol refer to the same compound, as do D2 and ergocalciferol, while calciferol serves as a general term for both forms of vitamin D. During the filtering process, I observed that different years and datasets recorded the drug under various names. Although D3 was the most commonly mentioned term, including the other terms ensured that no relevant data was missed. This comprehensive approach minimized the risk of overlooking variations in naming conventions across the datasets.
 ```{R,message=FALSE,warning = FALSE}
 # 3. Filter for Vitamin D Prescriptions
@@ -77,6 +130,7 @@ monthly_vitamin_d <- vitamin_d_data %>%
   mutate(PaidDateMonth = as.character(PaidDateMonth))  # Ensure PaidDateMonth is a character
 ```
 ## Combining data sets
+
 The daylight data and the vitamin D prescription data were combined to facilitate the analysis of their relationship. Rows containing missing values were then removed to produce a clean dataset for further analysis.
 ```{r,message=FALSE,warning = FALSE}
 # 4. Combine Daylight and Prescription Data
@@ -88,7 +142,9 @@ cleaned_data <- combined_data %>%
   drop_na()
 ```
 # Data Visualisation
+
 ## Dual-axis plot
+
 A dual-axis line graph is used here to represent the relationship between daylight hours and Vitamin D prescription rates over time. This graph allows for the visualization of two variables with different units and scales on the same timeline, offering an intuitive comparison of their trends. By aligning daylight hours and prescription data on a shared x-axis, the graph facilitates an intuitive exploration of potential seasonal patterns and correlations between the two variables. To avoid an intuitive comparison, the same axis scale is provided for both variables.
 ```{r,warning = FALSE}
 # Create the dual-axis plot
@@ -140,8 +196,6 @@ The dual-axis line graph above illustrates the trends in daylight hours and vita
 
 However, contrary to the initial hypothesis that vitamin D prescriptions would show an inverse relationship with daylight hours, the graph does not indicate a significant change in prescription patterns corresponding to seasonal variations in sunlight exposure. Vitamin D prescription numbers remain relatively stable throughout the year, with only minimal fluctuations that do not align closely with changes in daylight hours.
 
-To explore this further, a linear regression model will be conducted to determine whether any statistically significant relationship exists between seasonal changes in daylight and vitamin D prescriptions. This approach will provide a more quantitative understanding of the trends observed in the data.
-
 ## Scatter plot
 ```{r,warning = FALSE}
 # Create the Scatter plot
@@ -157,6 +211,8 @@ ggplot(cleaned_data, aes(x = daylight, y = total_paid_quantity/100000)) +
 
 The scatter plot above illustrates the relationship between monthly daylight hours and Vitamin D prescription numbers in Scotland from August 2021 to September 2024.The distribution of points is scattered, and no strong linear relationship is evident.
 
+To explore this further, a linear regression model will be conducted to determine whether any statistically significant relationship exists between seasonal changes in daylight and vitamin D prescriptions. This approach will provide a more quantitative understanding of the trends observed in the data.
+
 # Statistical analysis
 ```{r, warning = FALSE}
 # Perform one-way ANOVA
@@ -168,22 +224,29 @@ summary(lm_result)
 The linear regression analysis aimed to assess the relationship between daylight hours and the total number of Vitamin D prescriptions in Scotland from August 2021 to September 2024. This result provides no evidence on whether Vitamin D prescription quantity is associated with daylight hours. The regression coefficient for daylight hours was small (3,794), with a p-value of 0.33, indicating no statistically significant relationship between these variables. The R-squared value of 0.027 reveals that daylight hours explain only 2.7% of the variation in prescription numbers, suggesting that other factors may influence Vitamin D prescription trends.
 
 # Limitation and Future Research
+
 ## Limitation
+
 ### Data Collection Anomalies (Post-202305)
+
 After May 2023, there was a noticeable increase in vitamin D prescriptions (from $8*10^6$ to $1.1*10^7$). This is likely due to the revised way the paid quantity is reported. Instead of representing the number of physical items dispensed (e.g., a single bottle of vitamin D tablets), the data now reflects the total number of doses or units contained within those items. For instance, a previous record might have shown one item of vitamin D tablets with a paid quantity of 1, whereas the updated reporting might record the total number of tablets in the bottle, significantly increasing the overall paid quantity (www.opendata.nhs.scot, n.d.).
 
 This change make it difficult to determine whether observed increases in paid quantities represent an actual rise in demand or are artifacts of the updated data structure. Thus, introducing potential biases that should be considered when interpreting results which highlights the need for caution when interpreting trends from May 2023 onwards, as they may not reflect true prescribing behaviors.
 
 ### Short Time Frame
+
 This study spans only three years (2021–2024), which is a relatively short period for analyzing long-term trends in vitamin D prescriptions. A longer time frame would provide a more reliable understanding of patterns and potential seasonality effects.
 
 ### Bias in Data Collection
+
 Individuals who are aware of their vitamin D deficiency or experience related symptoms are more likely to seek prescriptions from their GP, regardless of seasonal changes. Conversely, those who are unaware of their deficiency may not seek medical advice, even during winter months when sunlight exposure is reduced. Additionally, many individuals purchase over-the-counter vitamin D supplements from local stores, bypassing GP prescriptions, and these purchases are not captured in the dataset. Another factor introducing variability is the inclusion of prescriptions for children, such as D3 supplements, which are often prescribed for growth and development rather than in response to seasonal changes. Finally, individuals may stockpile vitamin D supplements, reducing the need for repeat prescriptions over time and further obscuring any seasonal trends in the data.
 
 ## Future Research
+
 Future research could focus on incorporating UV light intensity measurements instead of just sunlight hours, as UV light is directly responsible for vitamin D synthesis. Extending the study period to 20 years or more could provide better insights into long-term trends and seasonal patterns. Additionally, exploring alternative statistical methods, such as time series analysis, could help identify subtle patterns and relationships between sunlight exposure and vitamin D prescriptions over time.
 
 # Conclusion
+
 This study examined the relationship between seasonal changes in sunlight exposure and vitamin D prescription rates in Scotland. While the daylight data showed a clear seasonal pattern, the analysis did not reveal a significant correlation between sunlight exposure and vitamin D prescription numbers. Both the dual-axis line graph and the scatter plot highlighted the lack of evidence between these variables, with vitamin D prescriptions remaining relatively stable throughout the year.
 
 Future studies should consider extending the analysis period, incorporating UV light intensity measurements, and exploring additional variables that may affect vitamin D prescriptions. These steps would provide a more comprehensive understanding of the complex factors influencing vitamin D supplementation and its relationship with environmental conditions.
