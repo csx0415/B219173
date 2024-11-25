@@ -526,13 +526,25 @@ files &lt;- c(&quot;https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a79
           &quot;https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/35cbc6b1-3462-4563-88ba-d57c03782534/download/pitc202110.csv&quot;,
           &quot;https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/d7d1ada5-2763-4698-bf39-7bdb06f67377/download/pitc202109.csv&quot;,
           &quot;https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/6cdae245-0423-4e6f-9e1c-dc9e129df3aa/download/pitc202108.csv&quot;)
-
-# Function to handle files with or without the DMDCode column
-read_and_standardize &lt;- function(file) {
-  read_csv(file) %&gt;%
-    mutate(DMDCode = ifelse(&quot;DMDCode&quot; %in% colnames(.), as.character(DMDCode), NA_character_))
+# Helper function to detect the presence of DMDCode in the file
+detect_dmdcode &lt;- function(file) {
+  header &lt;- read_csv(file, n_max = 0, col_types = cols(.default = col_character())) %&gt;% colnames()
+  return(&quot;DMDCode&quot; %in% header)
 }
-
+# Function to read and standardize datasets
+read_and_standardize &lt;- function(file) {
+  # Check if DMDCode exists in the file
+  has_dmdcode &lt;- detect_dmdcode(file)
+  # Apply col_types conditionally
+  if (has_dmdcode) {
+    df &lt;- read_csv(file, col_types = cols(DMDCode = col_character(), .default = col_guess()))
+  } else {
+    df &lt;- read_csv(file, col_types = cols(.default = col_guess()))
+    df &lt;- df %&gt;% mutate(DMDCode = NA_character_)  # Add DMDCode column if missing
+  }
+  
+  return(df)
+}
 # Combine all prescribing data files
 consecutive_data &lt;- files %&gt;%
   map_dfr(~ read_and_standardize(.x))</code></pre>

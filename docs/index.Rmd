@@ -102,13 +102,25 @@ files <- c("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db
           "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/35cbc6b1-3462-4563-88ba-d57c03782534/download/pitc202110.csv",
           "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/d7d1ada5-2763-4698-bf39-7bdb06f67377/download/pitc202109.csv",
           "https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/6cdae245-0423-4e6f-9e1c-dc9e129df3aa/download/pitc202108.csv")
-
-# Function to handle files with or without the DMDCode column
-read_and_standardize <- function(file) {
-  read_csv(file) %>%
-    mutate(DMDCode = ifelse("DMDCode" %in% colnames(.), as.character(DMDCode), NA_character_))
+# Helper function to detect the presence of DMDCode in the file
+detect_dmdcode <- function(file) {
+  header <- read_csv(file, n_max = 0, col_types = cols(.default = col_character())) %>% colnames()
+  return("DMDCode" %in% header)
 }
-
+# Function to read and standardize datasets
+read_and_standardize <- function(file) {
+  # Check if DMDCode exists in the file
+  has_dmdcode <- detect_dmdcode(file)
+  # Apply col_types conditionally
+  if (has_dmdcode) {
+    df <- read_csv(file, col_types = cols(DMDCode = col_character(), .default = col_guess()))
+  } else {
+    df <- read_csv(file, col_types = cols(.default = col_guess()))
+    df <- df %>% mutate(DMDCode = NA_character_)  # Add DMDCode column if missing
+  }
+  
+  return(df)
+}
 # Combine all prescribing data files
 consecutive_data <- files %>%
   map_dfr(~ read_and_standardize(.x))
