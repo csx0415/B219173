@@ -26,7 +26,6 @@ library(purrr)
 library(readr)
 ```
 ## Daylight Data Preparation
-
 Daylight data from August 2021 to August 2024 was selected, transformed into a long format, and prepared for integration with the prescribing data. The dataset was restructured to ensure consistency in date formatting and compatibility for merging. Data sets associated with sunlight can be found here: https://www.metoffice.gov.uk/pub/data/weather/uk/climate/datasets/Sunshine/date/Scotland.txt
 ```{r, message=FALSE,warning = FALSE}
 # 1. Read Daylight Data
@@ -63,7 +62,6 @@ filtered_daylight_data <- long_daylight_data %>%
 
 ```
 ## Prescribing Data Preparation 
-
 Prescribing data from 37 monthly (August 2021 to August 2024) datasets was combined into a single comprehensive file for analysis. This step involved standardizing the structure of individual files to handle discrepancies, such as missing or inconsistent columns, ensuring a seamless merge for subsequent analyses.Data sets associated with prescriptions can be found here:https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community
 ```{r,message=FALSE,warning = FALSE}
 # 2. Read and Combine Prescribing Data
@@ -116,7 +114,6 @@ consecutive_data <- files %>%
   map_dfr(~ read_and_standardize(.x))
 ```
 ## Finding Vitamin D Prescription Quantity Each Month
-
 To identify the monthly quantity of vitamin D prescriptions, I filtered the dataset using keywords such as d3, d2, calciferol, cholecalciferol, and ergocalciferol. These terms were selected because they encompass the various names used for vitamin D. Specifically, D3 and cholecalciferol refer to the same compound, as do D2 and ergocalciferol, while calciferol serves as a general term for both forms of vitamin D. During the filtering process, I observed that different years and datasets recorded the drug under various names. Although D3 was the most commonly mentioned term, including the other terms ensured that no relevant data was missed. This comprehensive approach minimized the risk of overlooking variations in naming conventions across the datasets.
 ```{R,message=FALSE,warning = FALSE}
 # 3. Filter for Vitamin D Prescriptions
@@ -130,7 +127,6 @@ monthly_vitamin_d <- vitamin_d_data %>%
   mutate(PaidDateMonth = as.character(PaidDateMonth))  # Ensure PaidDateMonth is a character
 ```
 ## Combining data sets
-
 The daylight data and the vitamin D prescription data were combined to facilitate the analysis of their relationship. Rows containing missing values were then removed to produce a clean dataset for further analysis.
 ```{r,message=FALSE,warning = FALSE}
 # 4. Combine Daylight and Prescription Data
@@ -144,7 +140,6 @@ cleaned_data <- combined_data %>%
 # Data Visualisation
 
 ## Dual-axis plot
-
 A dual-axis line graph is used here to represent the relationship between daylight hours and Vitamin D prescription rates over time. This graph allows for the visualization of two variables with different units and scales on the same timeline, offering an intuitive comparison of their trends. By aligning daylight hours and prescription data on a shared x-axis, the graph facilitates an intuitive exploration of potential seasonal patterns and correlations between the two variables. To avoid an intuitive comparison, the same axis scale is provided for both variables.
 ```{r,warning = FALSE}
 # Create the dual-axis plot
@@ -211,51 +206,32 @@ ggplot(cleaned_data, aes(x = daylight, y = total_paid_quantity/100000)) +
 
 The scatter plot above illustrates the relationship between monthly daylight hours and Vitamin D prescription numbers in Scotland from August 2021 to September 2024.The distribution of points is scattered, and no strong linear relationship is evident.
 
-To explore this further, a linear regression model will be conducted to determine whether any statistically significant relationship exists between seasonal changes in daylight and vitamin D prescriptions. This approach will provide a more quantitative understanding of the trends observed in the data.
-
-# Statistical analysis
-```{r, warning = FALSE}
-# Perform one-way ANOVA
-lm_result <- lm(total_paid_quantity ~ daylight, cleaned_data)
-
-# Summary of the ANOVA test
-summary(lm_result)
-```
-The linear regression analysis aimed to assess the relationship between daylight hours and the total number of Vitamin D prescriptions in Scotland from August 2021 to September 2024. This result provides no evidence on whether Vitamin D prescription quantity is associated with daylight hours. The regression coefficient for daylight hours was small (3,794), with a p-value of 0.33, indicating no statistically significant relationship between these variables. The R-squared value of 0.027 reveals that daylight hours explain only 2.7% of the variation in prescription numbers, suggesting that other factors may influence Vitamin D prescription trends.
-
 # Limitation and Future Research
 
 ## Limitation
 
 ### Data Collection Anomalies (Post-202305)
-
 After May 2023, there was a noticeable increase in vitamin D prescriptions (from $8*10^6$ to $1.1*10^7$). This is likely due to the revised way the paid quantity is reported. Instead of representing the number of physical items dispensed (e.g., a single bottle of vitamin D tablets), the data now reflects the total number of doses or units contained within those items. For instance, a previous record might have shown one item of vitamin D tablets with a paid quantity of 1, whereas the updated reporting might record the total number of tablets in the bottle, significantly increasing the overall paid quantity (www.opendata.nhs.scot, n.d.).
 
 This change make it difficult to determine whether observed increases in paid quantities represent an actual rise in demand or are artifacts of the updated data structure. Thus, introducing potential biases that should be considered when interpreting results which highlights the need for caution when interpreting trends from May 2023 onwards, as they may not reflect true prescribing behaviors.
 
 ### Short Time Frame
-
 This study spans only three years (2021–2024), which is a relatively short period for analyzing long-term trends in vitamin D prescriptions. A longer time frame would provide a more reliable understanding of patterns and potential seasonality effects.
 
 ### Bias in Data Collection
-
 Individuals who are aware of their vitamin D deficiency or experience related symptoms are more likely to seek prescriptions from their GP, regardless of seasonal changes. Conversely, those who are unaware of their deficiency may not seek medical advice, even during winter months when sunlight exposure is reduced. Additionally, many individuals purchase over-the-counter vitamin D supplements from local stores, bypassing GP prescriptions, and these purchases are not captured in the dataset. Another factor introducing variability is the inclusion of prescriptions for children, such as D3 supplements, which are often prescribed for growth and development rather than in response to seasonal changes. Finally, individuals may stockpile vitamin D supplements, reducing the need for repeat prescriptions over time and further obscuring any seasonal trends in the data.
 
 ## Future Research
-
-Future research could focus on incorporating UV light intensity measurements instead of just sunlight hours, as UV light is directly responsible for vitamin D synthesis. Extending the study period to 20 years or more could provide better insights into long-term trends and seasonal patterns. Additionally, exploring alternative statistical methods, such as time series analysis, could help identify subtle patterns and relationships between sunlight exposure and vitamin D prescriptions over time.
+Future research could focus on incorporating UV light intensity measurements instead of just sunlight hours, as UV light is directly responsible for vitamin D synthesis. Extending the study period to 20 years or more could provide better insights into long-term trends and seasonal patterns. Additionally, exploring statistical methods could help identify subtle patterns and relationships between sunlight exposure and vitamin D prescriptions over time.
 
 # Conclusion
-
 This study examined the relationship between seasonal changes in sunlight exposure and vitamin D prescription rates in Scotland. While the daylight data showed a clear seasonal pattern, the analysis did not reveal a significant correlation between sunlight exposure and vitamin D prescription numbers. Both the dual-axis line graph and the scatter plot highlighted the lack of evidence between these variables, with vitamin D prescriptions remaining relatively stable throughout the year.
 
 Future studies should consider extending the analysis period, incorporating UV light intensity measurements, and exploring additional variables that may affect vitamin D prescriptions. These steps would provide a more comprehensive understanding of the complex factors influencing vitamin D supplementation and its relationship with environmental conditions.
 
 # Reference
 Bikle, D. (2017). Vitamin D: Production, Metabolism, and Mechanisms of Action. [online] Nih.gov. Available at: https://www.ncbi.nlm.nih.gov/books/NBK278935/.
-
 Spellman, G. and Bird, D. (2023). Sunshine and solar power in the UK. Theoretical and Applied Climatology. doi:https://doi.org/10.1007/s00704-023-04711-x.
-
 www.opendata.nhs.scot. (n.d.). Prescriptions in the Community - Scottish Health and Social Care Open Data. [online] Available at: https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community.
 
 # Generative AI

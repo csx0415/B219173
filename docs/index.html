@@ -378,7 +378,6 @@ Visualisation</a>
 plot</a></li>
 <li><a href="#scatter-plot" id="toc-scatter-plot">Scatter plot</a></li>
 </ul></li>
-<li><a href="#statistical-analysis" id="toc-statistical-analysis">Statistical analysis</a></li>
 <li><a href="#limitation-and-future-research" id="toc-limitation-and-future-research">Limitation and Future
 Research</a>
 <ul>
@@ -666,48 +665,7 @@ ggplot(cleaned_data, aes(x = daylight, y = total_paid_quantity/100000)) +
 daylight hours and Vitamin D prescription numbers in Scotland from
 August 2021 to September 2024.The distribution of points is scattered,
 and no strong linear relationship is evident.</p>
-<p>To explore this further, a linear regression model will be conducted
-to determine whether any statistically significant relationship exists
-between seasonal changes in daylight and vitamin D prescriptions. This
-approach will provide a more quantitative understanding of the trends
-observed in the data.</p>
 </div>
-</div>
-<div id="statistical-analysis" class="section level1">
-<h1>Statistical analysis</h1>
-<pre class="r"><code># Perform one-way ANOVA
-lm_result &lt;- lm(total_paid_quantity ~ daylight, cleaned_data)
-
-# Summary of the ANOVA test
-summary(lm_result)</code></pre>
-<pre><code>## 
-## Call:
-## lm(formula = total_paid_quantity ~ daylight, data = cleaned_data)
-## 
-## Residuals:
-##      Min       1Q   Median       3Q      Max 
-## -1517954 -1082236  -391644  1090937  1760554 
-## 
-## Coefficients:
-##             Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)  9093025     431774  21.060   &lt;2e-16 ***
-## daylight        3794       3862   0.983    0.333    
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## Residual standard error: 1167000 on 35 degrees of freedom
-## Multiple R-squared:  0.02684,    Adjusted R-squared:  -0.0009646 
-## F-statistic: 0.9653 on 1 and 35 DF,  p-value: 0.3326</code></pre>
-<p>The linear regression analysis aimed to assess the relationship
-between daylight hours and the total number of Vitamin D prescriptions
-in Scotland from August 2021 to September 2024. This result provides no
-evidence on whether Vitamin D prescription quantity is associated with
-daylight hours. The regression coefficient for daylight hours was small
-(3,794), with a p-value of 0.33, indicating no statistically significant
-relationship between these variables. The R-squared value of 0.027
-reveals that daylight hours explain only 2.7% of the variation in
-prescription numbers, suggesting that other factors may influence
-Vitamin D prescription trends.</p>
 </div>
 <div id="limitation-and-future-research" class="section level1">
 <h1>Limitation and Future Research</h1>
@@ -762,10 +720,9 @@ further obscuring any seasonal trends in the data.</p>
 measurements instead of just sunlight hours, as UV light is directly
 responsible for vitamin D synthesis. Extending the study period to 20
 years or more could provide better insights into long-term trends and
-seasonal patterns. Additionally, exploring alternative statistical
-methods, such as time series analysis, could help identify subtle
-patterns and relationships between sunlight exposure and vitamin D
-prescriptions over time.</p>
+seasonal patterns. Additionally, exploring statistical methods could
+help identify subtle patterns and relationships between sunlight
+exposure and vitamin D prescriptions over time.</p>
 </div>
 </div>
 <div id="conclusion" class="section level1">
@@ -787,11 +744,11 @@ environmental conditions.</p>
 <div id="reference" class="section level1">
 <h1>Reference</h1>
 <p>Bikle, D. (2017). Vitamin D: Production, Metabolism, and Mechanisms
-of Action. [online] Nih.gov. Available at: <a href="https://www.ncbi.nlm.nih.gov/books/NBK278935/" class="uri">https://www.ncbi.nlm.nih.gov/books/NBK278935/</a>.</p>
-<p>Spellman, G. and Bird, D. (2023). Sunshine and solar power in the UK.
-Theoretical and Applied Climatology. <a href="doi:https://doi.org/10.1007/s00704-023-04711-x" class="uri">doi:https://doi.org/10.1007/s00704-023-04711-x</a>.</p>
-<p>www.opendata.nhs.scot. (n.d.). Prescriptions in the Community -
-Scottish Health and Social Care Open Data. [online] Available at: <a href="https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community" class="uri">https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community</a>.</p>
+of Action. [online] Nih.gov. Available at: <a href="https://www.ncbi.nlm.nih.gov/books/NBK278935/" class="uri">https://www.ncbi.nlm.nih.gov/books/NBK278935/</a>. Spellman,
+G. and Bird, D. (2023). Sunshine and solar power in the UK. Theoretical
+and Applied Climatology. <a href="doi:https://doi.org/10.1007/s00704-023-04711-x" class="uri">doi:https://doi.org/10.1007/s00704-023-04711-x</a>.
+www.opendata.nhs.scot. (n.d.). Prescriptions in the Community - Scottish
+Health and Social Care Open Data. [online] Available at: <a href="https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community" class="uri">https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community</a>.</p>
 </div>
 <div id="generative-ai" class="section level1">
 <h1>Generative AI</h1>
